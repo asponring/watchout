@@ -1,29 +1,62 @@
-var Game = function(height, width, numEnemies) {
+
+//Authors: Andrew Sponring, Irfan Baqui
+//Date: April 2015
+
+var Game = function(height, width, numEnemies, numPlayers) {
   this.height = height;
   this.width = width;
   this.score = 0;
   this.highScore = 0;
   this.collision = 0;
   this.radius = 10;
-  var time = new Date().getTime();
+  this.time = new Date().getTime();
+  this.svg = d3.select(".battlefield").append("svg").attr("width", width).attr('height', height);
 
-  var svg = d3.select(".battlefield").append("svg").attr("width", width).attr('height', height);
-
-  this.players = [new Player(this.height,this.width)];
+  this.players = [];
+  for (var x = 0; x < numPlayers; x++) {
+    this.players.push(new Player(this.height , this.width));
+  }
+  this.enemies = [];
+  for (var x = 0; x < numEnemies; x++) {
+    this.enemies.push(new Enemy(this.height, this.width));
+  }
 
   var dragged = function(d) {
-    d3.select(this).attr("cx", d.x = (d3.event.x > 330) ? 330 : (d3.event.x < 10)  ? 10: d3.event.x)
-                  .attr("cy", d.y = (d3.event.y > 330) ? 330 : (d3.event.y < 10)  ? 10: d3.event.y);
+    d3.select(this)
+      .attr("cx", d.x = (d3.event.x > 330) ? 330 : (d3.event.x < 10)  ? 10: d3.event.x)
+      .attr("cy", d.y = (d3.event.y > 330) ? 330 : (d3.event.y < 10)  ? 10: d3.event.y);
   };
-  var drag = d3.behavior.drag()
+
+  this.drag = d3.behavior.drag()
     .origin(function(d) { return d; })
     .on("drag", dragged);
 
-  var player = d3.select("svg")
-            .data(this.players, function(d,i) {return i;});
+  this.player = this.svg.selectAll(".player")
+    .data(this.players, function(d,i) {return i;});
 
+  this.player
+    .enter()
+    .append("circle")
+    .attr("class", "player")
+    .attr("r", this.radius)
+    .attr("fill", "#ff0000")
+    .attr("cx", function(d,i) {return d.x;})
+    .attr("cy", function(d,i) {return d.x;})
+    .call(this.drag);
 
-  var countScore = function() {
+  this.enemyGraphic = this.svg.selectAll(".enemy")
+    .data(this.enemies, function(d, i) {return i;});
+
+  this.enemyGraphic.enter().append("image")
+    .attr("x", function(d) {return d.x;})
+    .attr("y", function(d) {return d.y;})
+    .attr("height", "20px")
+    .attr("width", "20px")
+    .attr("xlink:href", "shuriken.png")
+    .attr("fill", "black")
+    .attr("class", "enemy rotate");
+
+  this.countScore = function() {
     this.score++;
     d3.select("body").selectAll(".score")
     .data([this.score], function(d, i) {return i;})
@@ -37,39 +70,10 @@ var Game = function(height, width, numEnemies) {
     }
   };
 
-
-  setInterval(countScore, 100);
-
-  player
-    .append("circle")
-    .attr("class", "player")
-    .attr("r", this.radius)
-    .attr("fill", "#ff0000")
-    .attr("cx", function(d,i) {return d.x;})
-    .attr("cy", function(d,i) {return d.x;})
-    .call(drag);
-
-  this.enemies = [];
-  for (var x = 0; x < numEnemies; x++) {
-    this.enemies.push(new Enemy(this.height, this.width));
-  }
-
-  var enemyDots = d3.select("svg").selectAll(".enemy")
-                  .data(this.enemies, function(d, i) {return i;});
-
-  enemyDots.enter().append("image")
-    .attr("x", function(d) {return d.x;})
-    .attr("y", function(d) {return d.y;})
-    .attr("height", "20px")
-    .attr("width", "20px")
-    .attr("xlink:href", "shuriken.png")
-    .attr("fill", "black")
-    .attr("class", "enemy rotate");
-
-  var tweenWithCollisionDetection = function(endData) {
-    var endPos, enemy, startPos, endX, endY;
+  this.tweenWithCollisionDetection = function(endData) {
+    var endPos, enemy, startPos;
     enemy = d3.select(this);
-    var player = d3.select(".player");
+    var player = d3.selectAll(".player");
     startPos = {
       x: parseFloat(enemy.attr('x')),
       y: parseFloat(enemy.attr('y'))
@@ -79,6 +83,7 @@ var Game = function(height, width, numEnemies) {
       x: endData.x,
       y: endData.y
     };
+
     return function(t) {
       var enemyNextPos;
       checkCollision(enemy, player);
@@ -88,6 +93,7 @@ var Game = function(height, width, numEnemies) {
       };
       return enemy.attr('x', enemyNextPos.x).attr('y', enemyNextPos.y);
     };
+
   };
 
   var checkCollision = function(enemy, player) {
@@ -98,8 +104,8 @@ var Game = function(height, width, numEnemies) {
 
     var distance = Math.sqrt(Math.pow((x - playerx), 2) + Math.pow((y - playery), 2));
 
-    if (distance <= 2*this.radius && (new Date().getTime() - time > 500)) {
-      time = new Date().getTime();
+    if (distance <= 2*this.radius && (new Date().getTime() - this.time > 500)) {
+      this.time = new Date().getTime();
       this.collision++;
       d3.selectAll(".c").text(this.collision);
       this.score = 0;
@@ -110,15 +116,16 @@ var Game = function(height, width, numEnemies) {
     for (var x = 0; x < numEnemies; x++) {
       this.enemies[x].randomizePos();
     }
-    enemyDots.transition()
+    this.enemyGraphic.transition()
         .duration(2000)
-        .tween("custom", tweenWithCollisionDetection)
+        .tween("custom", this.tweenWithCollisionDetection)
         .attr("x", function(d) {return d.x;})
       .attr("y", function(d) {return d.y;});
 
       setTimeout(nextMove.bind(this), 3000);
   };
 
+  setInterval(this.countScore, 100);
   nextMove();
 };
 
@@ -137,20 +144,20 @@ Enemy.prototype.randomizePos = function() {
   this.x = Math.random() * (this.width);
   this.y = Math.random() * (this.height);
 
-    if (this.x > 320) {
-      this.x = 320;
-    }
-    if (this.x < 20) {
-      this.x = 20;
-    }
-    if (this.y > 320) {
-      this.y = 320;
-    }
-    if (this.y < 20) {
-      this.y = 20;
-    }
+  if (this.x > 320) {
+    this.x = 320;
+  }
+  if (this.x < 20) {
+    this.x = 20;
+  }
+  if (this.y > 320) {
+    this.y = 320;
+  }
+  if (this.y < 20) {
+    this.y = 20;
+  }
 };
 
-var newGame = Game(340, 340, 15);
+var newGame = Game(340, 340, 15, 1);
 
 
