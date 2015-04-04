@@ -1,5 +1,3 @@
-// start slingin' some d3 here.
-
 var Game = function(height, width, numEnemies) {
   this.height = height;
   this.width = width;
@@ -13,6 +11,10 @@ var Game = function(height, width, numEnemies) {
 
   this.players = [new Player(this.height,this.width)];
 
+  var dragged = function(d) {
+    d3.select(this).attr("cx", d.x = (d3.event.x > 330) ? 330 : (d3.event.x < 10)  ? 10: d3.event.x)
+                  .attr("cy", d.y = (d3.event.y > 330) ? 330 : (d3.event.y < 10)  ? 10: d3.event.y);
+  };
   var drag = d3.behavior.drag()
     .origin(function(d) { return d; })
     .on("drag", dragged);
@@ -62,30 +64,7 @@ var Game = function(height, width, numEnemies) {
     .attr("width", "20px")
     .attr("xlink:href", "shuriken.png")
     .attr("fill", "black")
-    // .attr("r", this.radius)
     .attr("class", "enemy rotate");
-
-
-
-  function dragged(d) {
-    var x = d3.event.x;
-    var y = d3.event.y;
-    if (d3.select(this).attr("cx") > 330) {
-      x = 330;
-    }
-    if (d3.select(this).attr("cx") < 10) {
-      x = 10;
-    }
-    if (d3.select(this).attr("cy") > 330) {
-      y = 330;
-    }
-    if (d3.select(this).attr("cy") < 10) {
-      y = 10;
-    }
-
-    d3.select(this).attr("cx", x);
-    d3.select(this).attr("cy", y);
-  }
 
   var tweenWithCollisionDetection = function(endData) {
     var endPos, enemy, startPos, endX, endY;
@@ -124,9 +103,7 @@ var Game = function(height, width, numEnemies) {
       this.collision++;
       d3.selectAll(".c").text(this.collision);
       this.score = 0;
-      console.log(this.collision);
     }
-
   };
 
   var nextMove = function() {
@@ -143,15 +120,12 @@ var Game = function(height, width, numEnemies) {
   };
 
   nextMove();
-
 };
-
 
 var Player = function(height, width) {
   this.x = width/2;
   this.y = height/2;
 };
-
 
 var Enemy = function(height, width) {
   this.width = width;
@@ -176,7 +150,6 @@ Enemy.prototype.randomizePos = function() {
       this.y = 20;
     }
 };
-
 
 var newGame = Game(340, 340, 15);
 
