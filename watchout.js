@@ -55,36 +55,47 @@ var Game = function(height, width, numEnemies) {
   var enemyDots = d3.select("svg").selectAll(".enemy")
                   .data(this.enemies, function(d, i) {return i;});
 
-  enemyDots.enter().append("circle")
-    .attr("cx", function(d) {return d.x;})
-    .attr("cy", function(d) {return d.y;})
+  enemyDots.enter().append("image")
+    .attr("x", function(d) {return d.x;})
+    .attr("y", function(d) {return d.y;})
+    .attr("height", "20px")
+    .attr("width", "20px")
+    .attr("xlink:href", "shuriken.png")
     .attr("fill", "black")
-    .attr("class", "enemy")
-    .attr("r", this.radius);
+    // .attr("r", this.radius)
+    .attr("class", "enemy rotate");
 
 
 
   function dragged(d) {
     var x = d3.event.x;
     var y = d3.event.y;
+    if (d3.select(this).attr("cx") > 330) {
+      x = 330;
+    }
+    if (d3.select(this).attr("cx") < 10) {
+      x = 10;
+    }
+    if (d3.select(this).attr("cy") > 330) {
+      y = 330;
+    }
+    if (d3.select(this).attr("cy") < 10) {
+      y = 10;
+    }
+
     d3.select(this).attr("cx", x);
-    if (d3.select(this).attr("cx") > this.width - 300) {
-      x = this.width - 300;
-    }
     d3.select(this).attr("cy", y);
-    if (d3.select(this).attr("cy") > this.height - 300) {
-      y = this.height - 300;
-    }
   }
 
   var tweenWithCollisionDetection = function(endData) {
-    var endPos, enemy, startPos;
+    var endPos, enemy, startPos, endX, endY;
     enemy = d3.select(this);
     var player = d3.select(".player");
     startPos = {
-      x: parseFloat(enemy.attr('cx')),
-      y: parseFloat(enemy.attr('cy'))
+      x: parseFloat(enemy.attr('x')),
+      y: parseFloat(enemy.attr('y'))
     };
+
     endPos = {
       x: endData.x,
       y: endData.y
@@ -96,13 +107,13 @@ var Game = function(height, width, numEnemies) {
         x: startPos.x + (endPos.x - startPos.x) * t,
         y: startPos.y + (endPos.y - startPos.y) * t
       };
-      return enemy.attr('cx', enemyNextPos.x).attr('cy', enemyNextPos.y);
+      return enemy.attr('x', enemyNextPos.x).attr('y', enemyNextPos.y);
     };
   };
 
   var checkCollision = function(enemy, player) {
-    var x = enemy.attr("cx");
-    var y = enemy.attr("cy");
+    var x = enemy.attr("x");
+    var y = enemy.attr("y");
     var playerx = player.attr("cx");
     var playery = player.attr("cy");
 
@@ -125,8 +136,8 @@ var Game = function(height, width, numEnemies) {
     enemyDots.transition()
         .duration(2000)
         .tween("custom", tweenWithCollisionDetection)
-        .attr("cx", function(d) {return d.x;})
-      .attr("cy", function(d) {return d.y;});
+        .attr("x", function(d) {return d.x;})
+      .attr("y", function(d) {return d.y;});
 
       setTimeout(nextMove.bind(this), 3000);
   };
@@ -148,8 +159,22 @@ var Enemy = function(height, width) {
   this.randomizePos();
 };
 Enemy.prototype.randomizePos = function() {
-  this.x = 36 + Math.random() * (this.width - 10);
-  this.y = 80 + Math.random() * (this.height - 10);
+
+  this.x = Math.random() * (this.width);
+  this.y = Math.random() * (this.height);
+
+    if (this.x > 320) {
+      this.x = 320;
+    }
+    if (this.x < 20) {
+      this.x = 20;
+    }
+    if (this.y > 320) {
+      this.y = 320;
+    }
+    if (this.y < 20) {
+      this.y = 20;
+    }
 };
 
 
