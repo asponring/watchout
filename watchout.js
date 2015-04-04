@@ -11,7 +11,10 @@ var Game = function(height, width, numEnemies) {
     .origin(function(d) { return d; })
     .on("drag", dragged);
 
-  var player = d3.select("svg").data(this.players, function(d,i) {return i;})
+  var player = d3.select("svg")
+            .data(this.players, function(d,i) {return i;});
+
+          player
             .append("circle")
             .attr("r", "5")
             .attr("fill", "#ff0000")
@@ -32,7 +35,8 @@ var Game = function(height, width, numEnemies) {
     .attr("cy", function(d) {return d.y;})
     .attr("fill", "black")
     .attr("class", "enemy")
-    .attr("r", "5");
+    .attr("r", "5")
+    // .visit(collide(player));
 
   var nextMove = function() {
     for (var x = 0; x < numEnemies; x++) {
@@ -88,9 +92,8 @@ var Game = function(height, width, numEnemies) {
 
 
 //     @el.call(drag)
-
-
 };
+
 
 var Player = function(height, width) {
   this.x = width/2;
