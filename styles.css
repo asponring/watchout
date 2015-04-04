@@ -13,6 +13,10 @@ Feel free to use it if you like. */
   border: 5px solid black;
 }
 
+svg {
+  border: 1px solid black;
+}
+
 .enemy {
-  radius: 3px;
+  position: absolute;
 }
